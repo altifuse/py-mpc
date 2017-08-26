@@ -1,2 +1,2 @@
 # py-mpc
-A simple, didatic Model-based Predictive Control implementation in Python.
+A simple, didactic Model-based Predictive Control implementation in Python.
