@@ -1,6 +1,5 @@
 # python libs
 import numpy as np
-import time
 import pyximport
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
@@ -9,26 +8,24 @@ global cymodels
 
 def initialize_models():
     global cymodels
-    from mpc import cymodels
+    # import cymodels # to be used with compiled models for improved performance
 
 
-def prediction(models, actuators, history_array, prediction_horizon, history_length, initial_tick):
-    predictions = [list() for i in range(uwabami.Tick.number_of_models)]
+def prediction(models, controls, history_array, prediction_horizon, history_length, initial_tick, number_of_controls, number_of_variables):
+    predictions = [list() for i in range(number_of_controls)]
 
     for t in range(prediction_horizon):
-        new_tick = history_array[-uwabami.Tick.number_of_columns:].copy()
+        new_tick = history_array[-number_of_variables:].copy()
         history_array = np.concatenate([[0], history_array])
-        for i in range(uwabami.Tick.number_of_models):
+        for i in range(number_of_controls):
             new_tick[i] = cymodels.eval(i, history_array)
             predictions[i].append(new_tick[i])
-        # replacing actuators:
-        new_tick[uwabami.Tick.steer_index], \
-            new_tick[uwabami.Tick.accel_index], \
-            new_tick[uwabami.Tick.brake_index] = actuators[((uwabami.Tick.number_of_actuators - 1) * t):(
-                (uwabami.Tick.number_of_actuators - 1) * (t + 1))]
+
+        # replacing controls:
+        # new_tick[desired_indexes] = controls[((number_of_controls - 1) * t):((number_of_controls - 1) * (t + 1))]
 
         # update history with current tick and remove oldest tick to enforce history length
-        history_array = np.concatenate([history_array[uwabami.Tick.number_of_columns:], new_tick])
+        history_array = np.concatenate([history_array[number_of_variables:], new_tick])
     return predictions
 
 
